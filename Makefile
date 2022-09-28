@@ -6,7 +6,7 @@ CXX = c++14
 CFLAGS = -Wall -O3 -g -Wextra -std=$(CXX) -Wno-unused-variable
 
 all: misc.o main.o LZ77.o
-	g++  $(OBJ) $(CFLAGS) -o bin/jwc.exe
+	g++  $(OBJ) $(CFLAGS) -o bin/jwc
 
 misc.o: src/misc.cpp
 	g++ -c $^ -o bin/$@ $(CFLAGS)
