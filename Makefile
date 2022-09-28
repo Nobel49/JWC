@@ -1,24 +1,22 @@
-LIB = src/algo
+LIB = ./src/algo
 OBJ = $(wildcard bin/*.o)
+CXX = c++14
 
 
-CFLAGS = -Wall 
+CFLAGS = -Wall -O3 -g -Wextra -std=$(CXX)
 
+all: misc.o main.o LZ77.o
+	g++  $(OBJ) $(CFLAGS) -o bin/jwc.exe
 
-all: main.o LZ77.o
-	g++  $(OBJ) $(CFLAGS) -o bin/JWC.exe
-
-test: bin/JWC.exe
-	$^ test/input.txt test/output.txt
+misc.o: src/misc.cpp
+	g++ -c $^ -o bin/$@ $(CFLAGS)
 
 main.o: src/main.cpp
-	g++ -c src/main.cpp -o bin/main.o
+	g++ -c $^ -o bin/$@ $(CFLAGS)
 
 
 LZ77.o: $(LIB)/LZ77.cpp
-	g++ -c $(LIB)/LZ77.cpp -o bin/LZ77.o
+	g++ -c $^ -o bin/$@ $(CFLAGS)
 
-clean:
-	cd bin
-	del /S "*.o"
-	cd ..
+
+

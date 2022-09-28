@@ -1,122 +1,173 @@
-/*
-    this library currently returns strings as output rather than actual binary bits
-    so the compresed output may take more space than the input.
-    Also, only compression is implemented till now
-*/
-
 #include "LZ77.hpp"
 
-std::pair<int, int> longest_possible_substr(std::string &searchBuffer, std::string &lookaheadBuffer)
+std::pair<uint16_t, uint8_t> longest_possible_substr(std::string &searchBuffer, std::string &lookaheadBuffer)
 {
 
-    uint16_t  _SB_SIZE = searchBuffer.size();
-    uint8_t _LB_SIZE = lookaheadBuffer.size();
+    uint16_t TMP_SB_SIZE = searchBuffer.size(), TMP_LB_SIZE = lookaheadBuffer.size();
 
     uint16_t global_best = 0, pos = 0;
 
-    for (int i = _SB_SIZE; i >= 0; i--)
+    for (int i = TMP_SB_SIZE - 1; i >= 0; i--)
     {
         int local_best = 0;
-        //checking index bounds
-        while (searchBuffer[i + local_best] == lookaheadBuffer[local_best] && local_best < _LB_SIZE && i + local_best < _SB_SIZE)
+        while (searchBuffer[i + local_best] == lookaheadBuffer[local_best] && local_best < TMP_LB_SIZE && (i + local_best) < TMP_SB_SIZE)
             local_best++;
 
-        //update the best value
         if (local_best > global_best)
         {
             global_best = local_best;
             pos = i;
         }
-        if (global_best == _LB_SIZE)
+        if (global_best == TMP_LB_SIZE)
             break;
     }
 
-    //in case that the pattern found was not long enough or if no match wat not found at all.
     if (global_best < MIN_BYTE_COMPRESS)
         return (std::make_pair(0, 0));
 
-    return (std::make_pair(_SB_SIZE - pos, global_best));
+    return (std::make_pair(TMP_SB_SIZE - pos, global_best));
 }
 
 
-void compress(std::string &inputData,std::string outputFile)
-{
-    // for testing purposes. Opening the output file
-    std::ofstream OUTPUT_FILE;
-    OUTPUT_FILE.open(outputFile, std::ios::binary);
 
-    if (!OUTPUT_FILE)
+void compress(std::string inFilePath, std::string outFilePath)
+{
+    std::ifstream inFile;
+    inFile.open(inFilePath, std::ios::in | std::ios::binary);
+
+    std::ofstream outFile;
+    outFile.open(outFilePath, std::ios::binary | std::ios::out);
+
+    if (!inFile)
     {
-        std::cerr << "FILE ERROR : Couldn't Open Output File !!!" << std::endl;
-        exit(-1);
+        std::cerr << "READ ERROR : Couldn't open file" << std::endl;
+        exit(1);
     }
 
-    std::cout << "Started writing to file !!!" << std::endl;
-
-    int i = 0;
-
-    while (i < inputData.size())
+    if (!outFile)
     {
-        std::string compressedData = "";
+        std::cerr << "WRITE ERROR : Couldn't write file" << std::endl;
+        exit(2);
+    }
 
-        std::string searchBuf = i >= SIZE_SB ? inputData.substr(i - SIZE_SB, SIZE_SB) : inputData.substr(0, i);
-        std::string laBuf = inputData.substr(i, std::min(SIZE_LB, (int)inputData.size() - i));
+    //getting the input file size.
+    unsigned long long inputSize = get_file_size(inFilePath), index= 0;
+
+    //COPYING INPUT FILE CONTENT TO A TEMPORARY BUFFER.
+    std::string inputData = "";
+    inputData.resize(inputSize);
+    inFile.read(&inputData[0], inputSize);
+
+    inFile.close();
 
 
+    while (index < inputSize)
+    {
+        //declare the search buffera nd the look ahead buffer for the current index.
+        std::string searchBuffer = index >= SIZE_SB ? inputData.substr(index - SIZE_SB, SIZE_SB) : inputData.substr(0, index);
+        std::string lookAheadBuffer = inputData.substr(index, std::min((unsigned long long )SIZE_LB, inputSize - index));
 
-        std::pair<int, int> result = longest_possible_substr(searchBuf, laBuf);
+        //store the result from the longest_possible_substr in a pair
+        std::pair<uint16_t, uint8_t> match_tuple = longest_possible_substr(searchBuffer, lookAheadBuffer);
 
-        if (result.second == 0)
+        
+        //if there is no matching substring i.e. length=0 and size=0;
+        if (match_tuple.second == 0)
         {
-
-            if (inputData[i] == '\n')
-                OUTPUT_FILE << "\\n";
-
-            else if (inputData[i] == '\r')
-                OUTPUT_FILE << "\\r";
-
-            else
-                OUTPUT_FILE << inputData[i];
-
-            i++;
+            std::bitset<16> next_2_bytes = std::bitset<16>(inputData[index]);
+            outFile.write(reinterpret_cast<const char *>(&next_2_bytes), 2);
+            index++;
         }
 
+        //matching substring is found 
         else
         {
-            i += result.second;
-            OUTPUT_FILE << "<" << result.first << "," << result.second << ">";
+            std::bitset<16> next_2_bytes(match_tuple.second << 12 | match_tuple.first);
+            index += match_tuple.second;
+            outFile.write(reinterpret_cast<const char *>(&next_2_bytes), 2);
         }
     }
 
-    std::cout<<"Successfully written to file !!!"<<std::endl;
-    OUTPUT_FILE.close();
+    outFile.close();
+
 }
 
-
-void LZ77(std::string fileName,std::string outputFile)
+void decompress(std::string inFilePath, std::string outFilePath)
 {
-    std::ifstream FILE_INPUT;
 
-    FILE_INPUT.open(fileName, std::ios::in | std::ios::binary);
+    std::ifstream inFile;
+    inFile.open(inFilePath, std::ios::binary | std::ios::in);
 
-    if (!FILE_INPUT)
+    if (!inFile)
     {
-        std::cerr << "FILE ERROR : Couldn't Open Input File !!!" << std::endl;
-        exit(-1);
+        std::cerr << "READ ERROR : Couldn't Open File !!!" << std::endl;
+        exit(1);
     }
 
 
-    std::string data;
+    char firstByte, secondByte;
 
-    // Finding the file size and moving ifstream data to std::string
-    FILE_INPUT.seekg(0, std::ios::end);
-    data.resize(FILE_INPUT.tellg());
-    FILE_INPUT.seekg(0, std::ios::beg);
-    FILE_INPUT.read(&data[0], data.size());
-    FILE_INPUT.close();
+    unsigned long long  index = 0;
+    std::string outData = "";
 
-    // debug/misc info
-    std::cout << "File Size is : " << data.size() << std::endl;
+    while (!inFile.eof())
+    {
+        inFile.get(firstByte);
+        inFile.get(secondByte);
+        if (inFile.eof())
+            break;
 
-    compress(data,outputFile);
+        //\0 indiciates an empty byte i.e. a literal is in the byte after this one.
+        if (secondByte == '\0') 
+        {
+            //add the literal to the buffer;
+            outData += firstByte;
+            index++;
+        }
+
+        // if a reference is found to some substring.
+        else
+        {
+            
+            std::bitset<8> first(firstByte);
+
+            //left shift the secondbyte 8 positions.
+            std::bitset<16> referenceBytes(secondByte << 8);
+
+            //copy the first byte into the reference byte.
+            for (int i = 0; i < 8; i++)
+                referenceBytes[i] = first[i];
+            
+            //the first four bits give the size.
+            int length, size;
+            size = (int)(referenceBytes >> 12).to_ulong();
+
+            //then the remaining bits give the length.
+            for (int i = 12; i < 16; i++){
+                referenceBytes[i] = 0;
+            }
+            length = (int)referenceBytes.to_ulong();
+
+            //copy "size" number of characters from "index-length" position.
+            while (size--){
+                outData += (outData[index - length]);
+                index++;
+            }
+        }
+    }
+
+    inFile.close();
+
+
+    //write the outData buffer to a file.
+    std::ofstream outFile;
+    outFile.open(outFilePath, std::ios::binary | std::ios::out);
+    if (!outFile){
+        std::cerr << "WRITE ERROR : Couldn't Open File !!!" << std::endl;
+        exit(1);
+    }
+
+    outFile << outData;
+    outFile.close();
+
 }

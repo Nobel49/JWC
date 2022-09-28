@@ -1,20 +1,33 @@
+/*
+    this library is a variation on the classic LZ77 algorithm.
+    But instead of returning a 3 element tuple it returns 2 element tuple
+    of length and position in case if a substring matches else zero and
+    the character literal are returned.12 bits are used for the position
+    while 4 bits are used for size. So a reference in total consumes 2 bytes
+    of data.
+
+    Currently it uses greedy parsing for searching the substrings for matches.
+*/
+
 #pragma once
 
 //includes
 #include <iostream>
-#include <string>
+#include <fstream>
 #include <tuple>
 #include <bitset>
-#include <fstream>
+#include <string>
+#include <sys/stat.h>
 
-//some magic constants
-#define SIZE_SB 512
-#define SIZE_LB 16
-#define MIN_BYTE_COMPRESS 5
+#include "../misc.hpp"
 
+//magic numbers
+//Buffer size and minimum sizes to consider while returning a reference.
+#define SIZE_SB 4095
+#define SIZE_LB 15
+#define MIN_BYTE_COMPRESS 2
 
-//function prototypes.
-std::pair<int, int> longest_possible_substr(std::string &searchBuffer, std::string &lookaheadBuffer);
-void compress(std::string &inputData);
-void LZ77(std::string fileName,std::string outputFile);
+//prototypes
+void compress(std::string inFilePath, std::string outFilePath);
+void decompress(std::string inFilePath, std::string outFilePath);
 
