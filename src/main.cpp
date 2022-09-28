@@ -53,6 +53,7 @@ int main(int argc,char* argv[]){
         std::string inFilePath = argv[2];
 
         std::cout << "Starting Compression ..." << std::endl;
+        std::cout << "It may take some time..." << std::endl;
         compress(inFilePath, "Compressed-data.jwc");
         std::cout << "Compression Finished !!!" << std::endl
              << std::endl;

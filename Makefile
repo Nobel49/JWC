@@ -3,7 +3,7 @@ OBJ = $(wildcard bin/*.o)
 CXX = c++14
 
 
-CFLAGS = -Wall -O3 -g -Wextra -std=$(CXX)
+CFLAGS = -Wall -O3 -g -Wextra -std=$(CXX) -Wno-unused-variable
 
 all: misc.o main.o LZ77.o
 	g++  $(OBJ) $(CFLAGS) -o bin/jwc.exe
@@ -17,6 +17,5 @@ main.o: src/main.cpp
 
 LZ77.o: $(LIB)/LZ77.cpp
 	g++ -c $^ -o bin/$@ $(CFLAGS)
-
 
 
