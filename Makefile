@@ -14,7 +14,6 @@ misc.o: src/misc.cpp
 main.o: src/main.cpp
 	g++ -c $^ -o bin/$@ $(CFLAGS)
 
-
 LZ77.o: $(LIB)/LZ77.cpp
 	g++ -c $^ -o bin/$@ $(CFLAGS)
 
