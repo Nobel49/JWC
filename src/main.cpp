@@ -12,6 +12,7 @@ void print_help()
     std::cerr << "Options:" << std::endl;
     std::cerr << "\t -c    compress the input file and save it in output file." << std::endl;
     std::cerr << "\t -d    decompress the input file and save it in output file." << std::endl;
+    exit(1);
 }
 
 int main(int argc, char *argv[])
@@ -20,7 +21,6 @@ int main(int argc, char *argv[])
     if (argc < 3)
     {
         print_help();
-        exit(1);
     }
 
     std::string flag = argv[1];
