@@ -1,8 +1,11 @@
 #include "misc.hpp"
 
+
+
 double compression_ratio(unsigned long long inFileSize, unsigned long long compressedFileSize)
 {
-    return ((inFileSize - compressedFileSize) / (double)inFileSize) * 100;
+
+    return ((long long )(inFileSize - compressedFileSize) / (double)inFileSize) * 100;
 }
 
 unsigned long long get_file_size(std::string file_name)

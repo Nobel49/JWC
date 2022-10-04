@@ -72,10 +72,15 @@ void compress(std::string inFilePath, std::string outFilePath)
 
         
         //if there is no matching substring i.e. length=0 and size=0;
+
         if (match_tuple.second == 0)
         {
-            std::bitset<16> next_2_bytes = std::bitset<16>(inputData[index]);
-            outFile.write(reinterpret_cast<const char *>(&next_2_bytes), 2);
+            const char not_found_flag = '\0';      
+
+            //write the literal and the not found flag.
+            outFile.write(&inputData[index],1);
+            outFile.write(&not_found_flag,1);
+
             index++;
         }
 
