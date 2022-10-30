@@ -61,7 +61,7 @@ int main(int argc, char *argv[])
 
         std::cout << "Starting Decompression ..." << std::endl;
 
-        std::string decompressedFile = "Decompressed-data.mp4";
+        std::string decompressedFile = getFileName(inFilePath);
 
         decompress("Compressed-data.jwc", decompressedFile);
 

@@ -3,14 +3,14 @@
 std::pair<uint16_t, uint8_t> longest_possible_substr(std::string &searchBuffer, std::string &lookaheadBuffer)
 {
 
-    uint16_t TMP_SB_SIZE = searchBuffer.size(), TMP_LB_SIZE = lookaheadBuffer.size();
+    uint16_t LOCAL_SB_SIZE = searchBuffer.size(), LOCAL_LB_SIZE = lookaheadBuffer.size();
 
     uint16_t global_best = 0, pos = 0;
 
-    for (int i = TMP_SB_SIZE - 1; i >= 0; i--)
+    for (int i = LOCAL_SB_SIZE - 1; i >= 0; i--)
     {
         int local_best = 0;
-        while (searchBuffer[i + local_best] == lookaheadBuffer[local_best] && local_best < TMP_LB_SIZE && (i + local_best) < TMP_SB_SIZE)
+        while (searchBuffer[i + local_best] == lookaheadBuffer[local_best] && local_best < LOCAL_LB_SIZE && (i + local_best) < LOCAL_SB_SIZE)
             local_best++;
 
         if (local_best > global_best)
@@ -18,14 +18,14 @@ std::pair<uint16_t, uint8_t> longest_possible_substr(std::string &searchBuffer, 
             global_best = local_best;
             pos = i;
         }
-        if (global_best == TMP_LB_SIZE)
+        if (global_best == LOCAL_LB_SIZE)
             break;
     }
 
     if (global_best < MIN_BYTE_COMPRESS)
         return (std::make_pair(0, 0));
 
-    return (std::make_pair(TMP_SB_SIZE - pos, global_best));
+    return (std::make_pair(LOCAL_SB_SIZE - pos, global_best));
 }
 
 
@@ -53,7 +53,7 @@ void compress(std::string inFilePath, std::string outFilePath)
     //getting the input file size.
     unsigned long long inputSize = get_file_size(inFilePath), index= 0;
 
-    //COPYING INPUT FILE CONTENT TO A TEMPORARY BUFFER.
+    //COPYING INPUT FILE CONTENT TO A TEMPORARY BUFFER
     std::string inputData = "";
     inputData.resize(inputSize);
     inFile.read(&inputData[0], inputSize);
@@ -72,11 +72,8 @@ void compress(std::string inFilePath, std::string outFilePath)
 
         
         //if there is no matching substring i.e. length=0 and size=0;
-
         if (match_tuple.second == 0)
         {
-            const char not_found_flag = '\0';      
-
             //write the literal and the not found flag.
             outFile.write(&inputData[index],1);
             outFile.write(&not_found_flag,1);
@@ -132,8 +129,7 @@ void decompress(std::string inFilePath, std::string outFilePath)
 
         // if a reference is found to some substring.
         else
-        {
-            
+        {     
             std::bitset<8> first(firstByte);
 
             //left shift the secondbyte 8 positions.
@@ -142,9 +138,10 @@ void decompress(std::string inFilePath, std::string outFilePath)
             //copy the first byte into the reference byte.
             for (int i = 0; i < 8; i++)
                 referenceBytes[i] = first[i];
-            
-            //the first four bits give the size.
+
             int length, size;
+
+            //the first four bits give the size.
             size = (int)(referenceBytes >> 12).to_ulong();
 
             //then the remaining bits give the length.

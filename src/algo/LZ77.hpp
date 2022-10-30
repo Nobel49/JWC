@@ -27,6 +27,9 @@
 #define SIZE_LB 15
 #define MIN_BYTE_COMPRESS 2
 
+//flag/s
+const char not_found_flag = '\0';
+
 //prototypes
 void compress(std::string inFilePath, std::string outFilePath);
 void decompress(std::string inFilePath, std::string outFilePath);
